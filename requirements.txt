@@ -5,3 +5,5 @@ tiktoken
 openai
 python-dotenv
 fastapi
+boto3
+uvicorn

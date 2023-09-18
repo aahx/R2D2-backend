@@ -1,0 +1,32 @@
+React App
+
+----------------------------
+| Input: New Prospect Info |
+|                          |
+|                          |
+|                          |
+|                          |
+|          [Submit]        |
+----------------------------
+POST method to "/update_prospect_info"
+
+
+----------------------------
+| Input: New Company Info  |
+|                          |
+|                          |
+|                          |
+|                          |
+|          [Submit]        |
+----------------------------
+POST method to "/update_company_info"
+
+
+----------------------------
+| Output: Verbose=True     |
+|                          |
+|                          |
+|                          |
+|                          |
+|          [Submit]        |
+----------------------------
