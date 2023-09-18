@@ -1,7 +1,6 @@
 # AI - Sales Marketing Email Generator
 ## Langchain and OpenAi API
 
-
 ## Next:
 #### Currently not AWS integrated.
 
