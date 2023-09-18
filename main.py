@@ -60,7 +60,7 @@ async def udpate_company_info(data: CompanyUpdateModel):
             Going to write this a S3 bucket in the cloud
         """
         # Write the updated information to the prospect_info.txt file
-        with open(prospect_info_path, "w") as file:
+        with open(company_info_path, "w") as file:
             file.write(updated_info)
 
         return {'message': 'Company information updated successfully'}
@@ -143,16 +143,21 @@ combine_prompt = """
 @app.post('/generate_email')
 async def generate_email(data: EmailGenerationRequest):
     try:
-        # Fetch prospect information from the cloud storage
+        # # Fetch prospect information from the cloud storage
+        """ 
+            https://python.langchain.com/docs/integrations/document_loaders/aws_s3_file
+            https://python.langchain.com/docs/integrations/document_loaders/aws_s3_file
+            https://python.langchain.com/docs/integrations/document_loaders/aws_s3_file
+        """
         prospect_info_url = data.prospect_info_url
-        prospect_info = fetch_info_from_cloud_storage(prospect_info_url)
+        # prospect_info = fetch_info_from_cloud_storage(prospect_info_url)
 
         # Fetch company information from the cloud storage (similar to the prospect information)
         company_info_url = data.company_info_url
         company_info = fetch_info_from_cloud_storage(company_info_url)
 
         # Loading and spliting propsect info
-        docs = load_and_split_document(prospect_info)
+        docs = load_and_split_document(prospect_info_url)
         print (f"You now have {len(docs)} split documents")
 
         # Map_prompt: This prompt is used during initial processing of individual split documents.    
