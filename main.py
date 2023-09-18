@@ -7,6 +7,9 @@ from langchain.llms import OpenAI
 from langchain.prompts import PromptTemplate
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
+from fastapi import FastAPI
+from pydantic import BaseModel
+
 # Load environment variables
 load_dotenv()
 API_KEY = os.getenv("API_KEY")
@@ -21,10 +24,15 @@ with open(company_info_path, "r") as file:
     company_info = file.read()
 
 
+
+
+
+
+
 # Load prospect information from a file
 def get_prospect_data():
     loader = TextLoader(prospect_info_path)
-    return loader.load()
+    return loader.load()    
 
 data = get_prospect_data()
 print(f"You have {len(data)} main document(s)")
