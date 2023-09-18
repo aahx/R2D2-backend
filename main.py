@@ -2,9 +2,8 @@ import os
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
-from models import ProspectUpdateModel, CompanyUpdateModel, EmailGenerationRequest
+from models import UpdateCompanyInfoModel, EmailGenerationRequest
 from langchain.document_loaders import TextLoader
-from langchain.document_loaders import S3FileLoader
 from langchain.chains.summarize import load_summarize_chain
 from langchain.llms import OpenAI
 from langchain.prompts import PromptTemplate
@@ -17,82 +16,55 @@ app = FastAPI()
 load_dotenv()
 os.environ["OPENAI_API_KEY"] = os.getenv("API_KEY")
 
+
+### FAST API ENDPOINTS  ###
+
 # Health Check
-
-
 @app.get('/')
 async def health_check():
     return {"message": "health check status 200"}
 
-# Defining file paths for prospect and company information
+# Define file paths for prospect and company information
 prospect_info_path = './example_data/prospect_info.txt'
 company_info_path = './example_data/company_info.txt'
 
-# Get Company_Info.txt
+# Get company_info.txt
 @app.get('/company_info')
 async def get_company_info():
     return FileResponse(company_info_path)
 
-# Update Company_Info.txt
+# Update company_info.txt
 @app.post('/company_info')
-async def update_company_info(data: dict):
+async def update_company_info(data: UpdateCompanyInfoModel):
     try:
-        new_content = data.get("updated_company_info", "")
+        new_content = data.updated_info
         with open(company_info_path, 'w') as file:
             file.write(new_content)
         return {"message": "company_info.txt updated succesfully"}
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail="Failed to update Company_Info.txt")
+            status_code=500, detail="Failed to update company_info.txt")
 
+# Get prospect_info.txt
+@app.get('/prospect_info')
+async def get_prospect_info():
+    return FileResponse(prospect_info_path)
 
-# Updating Propsect Info
-@app.post('/update_prospect_info')
-async def udpate_prospect_info(data: ProspectUpdateModel):
+# Update prospect_info.txt
+@app.post('/prospect_info')
+async def update_prospect_info(data: UpdateCompanyInfoModel):
     try:
-        # Extract the updated prospect information
-        updated_info = data.prospect_info
-
-        # Write the updated information to the prospect_info.txt file
-        with open(prospect_info_path, "w") as file:
-            file.write(updated_info)
-
-        return {'message': 'Prospect information updated successfully'}
-
+        new_content = data.updated_info
+        with open(prospect_info_path, 'w') as file:
+            file.write(new_content)
+        return {"message": "prospect_info.txt updated succesfully"}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(
+            status_code=500, detail="Failed to update prospect_info.txt")
 
 
-# Updating Company Info
-@app.post('/update_company_info')
-async def udpate_company_info(data: CompanyUpdateModel):
-    try:
-        # Extract the updated prospect information
-        updated_info = data.company_info
-
-        """
-            Going to write this a S3 bucket in the cloud
-            Going to write this a S3 bucket in the cloud
-        """
-        # Write the updated information to the prospect_info.txt file
-        with open(company_info_path, "w") as file:
-            file.write(updated_info)
-
-        return {'message': 'Company information updated successfully'}
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
 
 
-"""
-    # Read company information from a file
-    with open(company_info_path, "r") as file:
-        company_info = file.read()
-
-        with open(prospect_info_path, "r") as file:
-    file_contents = file.read()
-
-"""
 
 
 def fetch_info_from_cloud_storage(url):
