@@ -1,4 +1,5 @@
 langchain
+jq
 unstructured
 chromadb
 tiktoken
