@@ -2,9 +2,12 @@ import os
 from typing import List
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
-from fastapi import UploadFile, File
+
+import tempfile
+from fastapi import UploadFile, File, Form
+
 from fastapi.responses import FileResponse
-from models import UpdateCompanyInfoModel, EmailGenerationRequest
+# from models import UpdateCompanyInfoModel
 from langchain.document_loaders import TextLoader
 from langchain.chains.summarize import load_summarize_chain
 from langchain.llms import OpenAI
@@ -54,7 +57,7 @@ async def get_prospect_info():
 
 # Update prospect_info.txt
 @app.post('/prospect_info')
-async def update_prospect_info(data: UpdateCompanyInfoModel):
+async def update_prospect_info(data: str):
     try:
         new_content = data.updated_info
         with open(prospect_info_path, 'w') as file:
@@ -65,27 +68,18 @@ async def update_prospect_info(data: UpdateCompanyInfoModel):
             status_code=500, detail="Failed to update prospect_info.txt")
 
 
-### Helper Functions / modularized for generate email/ LangChain Chain and OPEN AI ### NEW COMMENT
-def load_and_split_document(prospect_info):
-    print("----")
-    print(prospect_info)
-    loader = TextLoader(prospect_info)
-    print("----")
-    print(loader)
-    data = loader.load()
-    print("----")
-    print(data)
-    print(f"You have {len(data)} main document(s)")
 
-    # Split documents to avoid token limits and enable prompt engineering; Will be taking chunks and map_reducing
+### GENERATE EMAIL BELOW ###
+### Help functions for Generate Email ###
+def chunk_document(data):
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=1000,
         chunk_overlap=0
     )
     return text_splitter.split_documents(data)
 
-
-# Defining map_prompt: This prompt is used during initial processing of individual split documents.
+### PROMPTS ###
+# This prompt is used during initial processing of individual split documents.
 map_prompt = """ 
     % MAP PROMPT
 
@@ -94,9 +88,9 @@ map_prompt = """
     Write a concise summary about {prospect}. If the information is not about {prospect}, exclude it from your summary.
 
     {text} 
-"""
+    """
 
-# Define combine_prompt: This prompt is used when combining the outputs of the map pass.
+# This prompt is used when combining the outputs of the map pass.
 combine_prompt = """
     % COMBINE PROMPT
     
@@ -116,76 +110,81 @@ combine_prompt = """
         - The sentence: "We can help you do XYZ by ABC" Replace XYZ with what {prospect} does and ABC with what {company} does 
         - A 1-2 sentence description about {company}, be brief
         - End your email with a call-to-action such as asking them to set up time to talk more 
-"""
+    """
 
-
-# Define endpoint for email generation
+# Generate Email
 @app.post('/generate_email')
 async def generate_email(
-    prospect_info: List[UploadFile] = File(...),
-    company_info: List[UploadFile] = File(...)):
-    return {"message": "Files uploaded and processed successfully"}
+    prospect_file: List[UploadFile] = File(...),
+    company_info: str = Form(...),
+    company_name: str = Form(...),
+    sales_rep: str = Form(...),
+    prospect_name: str = Form(...)
+    ):
+    try:
+        # Loading prospect_file.txt
+        loader = None
+        for file in prospect_file:
+            with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+                temp_file.write(await file.read())
+                file_path = temp_file.name
+                loader = TextLoader(file_path)
+        data = loader.load()           
+        
+        # Splitting into Chunks
+        docs =  chunk_document(data)
 
-    # try:
-        # file_content = await company_info.read()
 
-        # company_info = data.company_info
-        # prospect_info = data.prospect_info
+        # Map_prompt: This prompt is used during initial processing of individual split documents.
+        map_prompt_template = PromptTemplate(
+            template=map_prompt,
+            input_variables=["text", "prospect"])
 
-        # print(company_info)
-        # print(prospect_info)
+        # Combine_prompt: This prompt is used when combining the outputs of the map pass.
+        combine_prompt_template = PromptTemplate(
+            template=combine_prompt,
+            input_variables=["company", "company_information", "sales_rep", "prospect", "text"])
 
-        # docs = load_and_split_document(prospect_info)
+        # Initialize the OpenAI language model
+        llm = OpenAI(temperature=.5)
 
-        # prospect_info_url = data.prospect_info_url
-        # # prospect_info = fetch_info_from_cloud_storage(prospect_info_url)
+        # Define a text generation chain
+        # Even though we're not summarizing, we use the load_summarize_chain for efficient map-reduce processing.
+        chain = load_summarize_chain(
+            llm,
+            chain_type="map_reduce",
+            map_prompt=map_prompt_template,
+            combine_prompt=combine_prompt_template,
+            verbose=True
+        )
 
-        # # Fetch company information from the cloud storage (similar to the prospect information)
-        # company_info_url = data.company_info_url
-        # company_info = fetch_info_from_cloud_storage(company_info_url)
+        # Generate text based on provided documents and prompts
+        output = chain({
+            "input_documents": docs,
+            "company": company_name,
+            "company_information": company_info,
+            "sales_rep": sales_rep,
+            "prospect": prospect_name
+        })
 
-        # # Loading and spliting propsect info
-        # docs = load_and_split_document(prospect_info_url)
-        # print(f"You now have {len(docs)} split documents")
+        # Print the generated output
+        return {"output_text": output['output_text']}
 
-        # # Map_prompt: This prompt is used during initial processing of individual split documents.
-        # map_prompt_template = PromptTemplate(
-        #     template=map_prompt,
-        #     input_variables=["text", "prospect"])
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
-        # # Combine_prompt: This prompt is used when combining the outputs of the map pass.
-        # # Define prompt template for combined map_prompt output summarization
-        # combine_prompt_template = PromptTemplate(
-        #     template=combine_prompt,
-        #     input_variables=["company", "company_information", "sales_rep", "prospect", "text"])
 
-        # # Initialize the OpenAI language model
-        # llm = OpenAI(temperature=.5)
+"""
+    # prospect_info: List[UploadFile] = File(...),
+    # company_info: List[UploadFile] = File(...)):
 
-        # # Define a text generation chain
-        # # Even though we're not summarizing, we use the load_summarize_chain for efficient map-reduce processing.
-        # chain = load_summarize_chain(
-        #     llm,
-        #     chain_type="map_reduce",
-        #     map_prompt=map_prompt_template,
-        #     combine_prompt=combine_prompt_template,
-        #     verbose=True
-        # )
-
-        # # >>> NEED TO QUERY COMPANY NAME
-        # # >>> NEED TO QUERY PROSPECT NAME
-
-        # # Generate text based on provided documents and prompts
-        # output = chain({
-        #     "input_documents": docs,
-        #     "company": "RapidRoad",
-        #     "company_information": company_info,
-        #     "sales_rep": "Michael",
-        #     "prospect": "GitLab"
-        # })
-
-        # # Print the generated output
-        # return {"output_text": output['output_text']}
-
-    # except Exception as e:
-    #     raise HTTPException(status_code=500, detail=str(e))
+    for AWS Lambda
+    for file in prospect_info:
+        # Create a temporary file in /tmp directory
+        with tempfile.NamedTemporaryFile(dir='/tmp', delete=False) as temp_file:
+            temp_file.write(await file.read())
+            file_path = temp_file.name
+        ...
+        # Clean up the temporary file
+        os.remove(file_path)
+"""
