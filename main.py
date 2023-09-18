@@ -1,6 +1,7 @@
 import os
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse
 from models import ProspectUpdateModel, CompanyUpdateModel, EmailGenerationRequest
 from langchain.document_loaders import TextLoader
 from langchain.document_loaders import S3FileLoader
@@ -8,40 +9,41 @@ from langchain.chains.summarize import load_summarize_chain
 from langchain.llms import OpenAI
 from langchain.prompts import PromptTemplate
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-import boto3
-import pprint
 
 # Creating a FastAPI instance
 app = FastAPI()
 
 # Loading environment variables
 load_dotenv()
-API_KEY = os.getenv("API_KEY")
-os.environ["OPENAI_API_KEY"] = API_KEY
-AWS_ACCESS_KEY = os.getenv("AWS_ACCESS_KEY")
-AWS_SECRET_KEY = os.getenv("AWS_SECRET_KEY")
+os.environ["OPENAI_API_KEY"] = os.getenv("API_KEY")
+
+# Health Check
+
+
+@app.get('/')
+async def health_check():
+    return {"message": "health check status 200"}
 
 # Defining file paths for prospect and company information
 prospect_info_path = './example_data/prospect_info.txt'
 company_info_path = './example_data/company_info.txt'
 
-# Health Path
-@app.get('/')
-async def health_check():
-    return { "message" : "health check status 200"}
-
-# TEMPORARY - CHECKING
-@app.get('/get_company_info')
+# Get Company_Info.txt
+@app.get('/company_info')
 async def get_company_info():
-    loader = S3FileLoader(
-        "r2d2-example-data",
-        "company_info.txt", 
-        aws_access_key_id=AWS_ACCESS_KEY,
-        aws_secret_access_key=AWS_SECRET_KEY)
-    data = loader.load()
-    pprint(data)
+    return FileResponse(company_info_path)
 
-
+# Update Company_Info.txt
+@app.post('/company_info')
+async def update_company_info(data: dict):
+    try:
+        new_content = data.get("updated_company_info", "")
+        with open(company_info_path, 'w') as file:
+            file.write(new_content)
+        return {"message": "company_info.txt updated succesfully"}
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail="Failed to update Company_Info.txt")
 
 
 # Updating Propsect Info
@@ -51,17 +53,12 @@ async def udpate_prospect_info(data: ProspectUpdateModel):
         # Extract the updated prospect information
         updated_info = data.prospect_info
 
-        """
-            Going to write this a S3 bucket in the cloud
-            Going to write this a S3 bucket in the cloud
-        """
-
         # Write the updated information to the prospect_info.txt file
         with open(prospect_info_path, "w") as file:
             file.write(updated_info)
 
         return {'message': 'Prospect information updated successfully'}
-    
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -82,11 +79,9 @@ async def udpate_company_info(data: CompanyUpdateModel):
             file.write(updated_info)
 
         return {'message': 'Company information updated successfully'}
-    
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-
 
 
 """
@@ -100,7 +95,6 @@ async def udpate_company_info(data: CompanyUpdateModel):
 """
 
 
-
 def fetch_info_from_cloud_storage(url):
     # Use your cloud storage library or SDK to fetch the content from the URL
     # For example, using AWS S3 and the boto3 library:
@@ -111,6 +105,7 @@ def fetch_info_from_cloud_storage(url):
 
     return content
 
+
 def load_and_split_document(prospect_info):
     # Loading prospect information
     loader = TextLoader(prospect_info)
@@ -119,12 +114,13 @@ def load_and_split_document(prospect_info):
 
     # Split documents to avoid token limits and enable prompt engineering; Will be taking chunks and map_reducing
     text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size = 1000,
-        chunk_overlap  = 0
+        chunk_size=1000,
+        chunk_overlap=0
     )
     return text_splitter.split_documents(data)
 
-# Defining map_prompt: This prompt is used during initial processing of individual split documents.    
+
+# Defining map_prompt: This prompt is used during initial processing of individual split documents.
 map_prompt = """ 
     % MAP PROMPT
 
@@ -134,7 +130,7 @@ map_prompt = """
 
     {text} 
 """
-    
+
 # Define combine_prompt: This prompt is used when combining the outputs of the map pass.
 combine_prompt = """
     % COMBINE PROMPT
@@ -158,6 +154,8 @@ combine_prompt = """
 """
 
 # Define endpoint for email generation
+
+
 @app.post('/generate_email')
 async def generate_email(data: EmailGenerationRequest):
     try:
@@ -176,17 +174,17 @@ async def generate_email(data: EmailGenerationRequest):
 
         # Loading and spliting propsect info
         docs = load_and_split_document(prospect_info_url)
-        print (f"You now have {len(docs)} split documents")
+        print(f"You now have {len(docs)} split documents")
 
-        # Map_prompt: This prompt is used during initial processing of individual split documents.    
+        # Map_prompt: This prompt is used during initial processing of individual split documents.
         map_prompt_template = PromptTemplate(
-            template=map_prompt, 
+            template=map_prompt,
             input_variables=["text", "prospect"])
 
         # Combine_prompt: This prompt is used when combining the outputs of the map pass.
         # Define prompt template for combined map_prompt output summarization
         combine_prompt_template = PromptTemplate(
-            template=combine_prompt, 
+            template=combine_prompt,
             input_variables=["company", "company_information", "sales_rep", "prospect", "text"])
 
         # Initialize the OpenAI language model
@@ -202,20 +200,20 @@ async def generate_email(data: EmailGenerationRequest):
             verbose=True
         )
 
-        ### >>> NEED TO QUERY COMPANY NAME
-        ### >>> NEED TO QUERY PROSPECT NAME
+        # >>> NEED TO QUERY COMPANY NAME
+        # >>> NEED TO QUERY PROSPECT NAME
 
         # Generate text based on provided documents and prompts
         output = chain({
             "input_documents": docs,
             "company": "RapidRoad",
-            "company_information" : company_info,
-            "sales_rep" : "Michael",
-            "prospect" : "GitLab"
+            "company_information": company_info,
+            "sales_rep": "Michael",
+            "prospect": "GitLab"
         })
 
         # Print the generated output
         return {"output_text": output['output_text']}
-    
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

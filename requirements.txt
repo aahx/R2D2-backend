@@ -1,5 +1,6 @@
 langchain
 unstructured
+"unstructured[docx]"
 chromadb
 tiktoken
 openai
