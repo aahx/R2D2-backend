@@ -1,37 +1,32 @@
 import os
 from typing import List
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException
-
 import tempfile
-from fastapi import UploadFile, File, Form
-
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form
 from fastapi.responses import FileResponse
-# from models import UpdateCompanyInfoModel
+from models import UpdateCompanyInfoModel
 from langchain.document_loaders import TextLoader
 from langchain.chains.summarize import load_summarize_chain
 from langchain.llms import OpenAI
 from langchain.prompts import PromptTemplate
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
-# Creating a FastAPI instance
+# Create a FastAPI instance
 app = FastAPI()
 
-# Loading environment variables
+# Load environment variables
 load_dotenv()
 os.environ["OPENAI_API_KEY"] = os.getenv("API_KEY")
 
+# Define file paths for company and prospect info
+prospect_info_path = './example_data/prospect_info.txt'
+company_info_path = './example_data/company_info.txt'
 
-### FAST API ENDPOINTS  ###
-# Health Check
+
+# Health check endpoint
 @app.get('/')
 async def health_check():
     return {"message": "health check status 200"}
-
-
-### File paths for GET and POST company and prospect info from txt files ###
-prospect_info_path = './example_data/prospect_info.txt'
-company_info_path = './example_data/company_info.txt'
 
 # Get company_info.txt
 @app.get('/company_info')
@@ -57,7 +52,7 @@ async def get_prospect_info():
 
 # Update prospect_info.txt
 @app.post('/prospect_info')
-async def update_prospect_info(data: str):
+async def update_prospect_info(data: UpdateCompanyInfoModel):
     try:
         new_content = data.updated_info
         with open(prospect_info_path, 'w') as file:
@@ -68,9 +63,7 @@ async def update_prospect_info(data: str):
             status_code=500, detail="Failed to update prospect_info.txt")
 
 
-
-### GENERATE EMAIL BELOW ###
-### Help functions for Generate Email ###
+# Helper function to chunk a document
 def chunk_document(data):
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=1000,
@@ -78,8 +71,8 @@ def chunk_document(data):
     )
     return text_splitter.split_documents(data)
 
-### PROMPTS ###
-# This prompt is used during initial processing of individual split documents.
+
+# Map prompt used during initial processing of split documents
 map_prompt = """ 
     % MAP PROMPT
 
@@ -90,7 +83,7 @@ map_prompt = """
     {text} 
     """
 
-# This prompt is used when combining the outputs of the map pass.
+# Combine prompt used when combining outputs of the map pass
 combine_prompt = """
     % COMBINE PROMPT
     
@@ -112,7 +105,7 @@ combine_prompt = """
         - End your email with a call-to-action such as asking them to set up time to talk more 
     """
 
-# Generate Email
+# Generate email endpoint
 @app.post('/generate_email')
 async def generate_email(
     prospect_file: List[UploadFile] = File(...),
@@ -122,7 +115,7 @@ async def generate_email(
     prospect_name: str = Form(...)
     ):
     try:
-        # Loading prospect_file.txt
+        # Load prospect_file.txt
         loader = None
         for file in prospect_file:
             with tempfile.NamedTemporaryFile(delete=False) as temp_file:
@@ -131,9 +124,8 @@ async def generate_email(
                 loader = TextLoader(file_path)
         data = loader.load()           
         
-        # Splitting into Chunks
+        # Split the document into chunks
         docs =  chunk_document(data)
-
 
         # Map_prompt: This prompt is used during initial processing of individual split documents.
         map_prompt_template = PromptTemplate(
@@ -145,7 +137,7 @@ async def generate_email(
             template=combine_prompt,
             input_variables=["company", "company_information", "sales_rep", "prospect", "text"])
 
-        # Initialize the OpenAI language model
+        # Initialize OpenAI language model
         llm = OpenAI(temperature=.5)
 
         # Define a text generation chain
