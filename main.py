@@ -3,11 +3,13 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from models import ProspectUpdateModel, CompanyUpdateModel, EmailGenerationRequest
 from langchain.document_loaders import TextLoader
+from langchain.document_loaders import S3FileLoader
 from langchain.chains.summarize import load_summarize_chain
 from langchain.llms import OpenAI
 from langchain.prompts import PromptTemplate
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 import boto3
+import pprint
 
 # Creating a FastAPI instance
 app = FastAPI()
@@ -16,6 +18,8 @@ app = FastAPI()
 load_dotenv()
 API_KEY = os.getenv("API_KEY")
 os.environ["OPENAI_API_KEY"] = API_KEY
+AWS_ACCESS_KEY = os.getenv("AWS_ACCESS_KEY")
+AWS_SECRET_KEY = os.getenv("AWS_SECRET_KEY")
 
 # Defining file paths for prospect and company information
 prospect_info_path = './example_data/prospect_info.txt'
@@ -25,6 +29,20 @@ company_info_path = './example_data/company_info.txt'
 @app.get('/')
 async def health_check():
     return { "message" : "health check status 200"}
+
+# TEMPORARY - CHECKING
+@app.get('/get_company_info')
+async def get_company_info():
+    loader = S3FileLoader(
+        "r2d2-example-data",
+        "company_info.txt", 
+        aws_access_key_id=AWS_ACCESS_KEY,
+        aws_secret_access_key=AWS_SECRET_KEY)
+    data = loader.load()
+    pprint(data)
+
+
+
 
 # Updating Propsect Info
 @app.post('/update_prospect_info')

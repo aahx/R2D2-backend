@@ -10,3 +10,6 @@
         # )
         # docs = text_splitter.split_documents(data)
         # print (f"You now have {len(docs)} split documents")
+
+
+# uvicorn your_module:your_app --host 0.0.0.0 --port 8000 --reload
