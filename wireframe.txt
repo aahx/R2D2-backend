@@ -1,5 +1,6 @@
 React App
 
+Update
 ----------------------------
 | Input: New Prospect Info |
 |                          |
@@ -10,7 +11,7 @@ React App
 ----------------------------
 POST method to "/update_prospect_info"
 
-
+Update
 ----------------------------
 | Input: New Company Info  |
 |                          |
@@ -20,6 +21,19 @@ POST method to "/update_prospect_info"
 |          [Submit]        |
 ----------------------------
 POST method to "/update_company_info"
+
+
+PICK UP HERE
+FORM TO GENERATE EMAIL
+---------------------------------
+| Input: Prospect Company Name  |
+| Input: Your Company Name      |
+| Input: Sales Rep              |
+|                               |
+|                               |
+|                               |
+|       [Generate Email]        |
+---------------------------------
 
 
 ----------------------------
