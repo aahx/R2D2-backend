@@ -1,6 +1,6 @@
 langchain
 unstructured
-"unstructured[docx]"
+python-multipart
 chromadb
 tiktoken
 openai
