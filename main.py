@@ -21,6 +21,10 @@ os.environ["OPENAI_API_KEY"] = API_KEY
 prospect_info_path = './example_data/prospect_info.txt'
 company_info_path = './example_data/company_info.txt'
 
+# Health Path
+@app.get('/')
+async def health_check():
+    return { "message" : "health check status 200"}
 
 # Updating Propsect Info
 @app.post('/update_prospect_info')
@@ -174,6 +178,9 @@ async def generate_email(data: EmailGenerationRequest):
             combine_prompt=combine_prompt_template,
             verbose=True
         )
+
+        ### >>> NEED TO QUERY COMPANY NAME
+        ### >>> NEED TO QUERY PROSPECT NAME
 
         # Generate text based on provided documents and prompts
         output = chain({
