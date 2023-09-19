@@ -2,10 +2,10 @@ import os
 from typing import List
 from dotenv import load_dotenv
 import tempfile
-from fastapi import FastAPI, HTTPException, UploadFile, File, Form
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
-from models import UpdateCompanyInfoModel
+from models import UpdateCompanyInfoModel, GenerateEmailModel
 from langchain.document_loaders import TextLoader
 from langchain.chains.summarize import load_summarize_chain
 from langchain.llms import OpenAI
@@ -133,25 +133,27 @@ combine_prompt = """
         - End your email with a call-to-action such as asking them to set up time to talk more 
     """
 
+# Creating a text file for prospect_info
+def create_temp_text_file(data):
+    with tempfile.NamedTemporaryFile(delete=False, mode="w", suffix=".txt") as temp_file:
+        temp_file.write(data)
+        return temp_file.name
+
 # Generate email endpoint
 @app.post('/generate_email')
-async def generate_email(
-    prospect_file: List[UploadFile] = File(...),
-    company_info: str = Form(...),
-    company_name: str = Form(...),
-    sales_rep: str = Form(...),
-    prospect_name: str = Form(...)
-    ):
+async def generate_email(data: GenerateEmailModel):
+    prospect_info = data.prospect_info
+    prospect_name = data.prospect_name
+    company_info = data.company_info
+    company_name = data.company_name
+    sales_rep = data.sales_rep
+
     try:
-        data = []
         # Load prospect_file.txt
-        for file in prospect_file:
-            with tempfile.NamedTemporaryFile(delete=False) as temp_file:
-                temp_file.write(await file.read())
-                file_path = temp_file.name
-                loader = TextLoader(file_path)
-                data = loader.load()           
-                print(data)
+        prospect_file_path = create_temp_text_file(prospect_info)
+        loader = TextLoader(prospect_file_path)
+        data = loader.load()           
+        print(data)
         
         # Split the document into chunks
         docs =  chunk_document(data)
