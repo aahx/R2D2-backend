@@ -122,14 +122,15 @@ async def generate_email(
     prospect_name: str = Form(...)
     ):
     try:
+        data = []
         # Load prospect_file.txt
-        loader = None
         for file in prospect_file:
             with tempfile.NamedTemporaryFile(delete=False) as temp_file:
                 temp_file.write(await file.read())
                 file_path = temp_file.name
                 loader = TextLoader(file_path)
-        data = loader.load()           
+                data = loader.load()           
+                print(data)
         
         # Split the document into chunks
         docs =  chunk_document(data)
@@ -154,7 +155,7 @@ async def generate_email(
             chain_type="map_reduce",
             map_prompt=map_prompt_template,
             combine_prompt=combine_prompt_template,
-            verbose=True
+            verbose=False
         )
 
         # Generate text based on provided documents and prompts
