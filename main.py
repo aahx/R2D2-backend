@@ -178,7 +178,7 @@ async def generate_email(data: GenerateEmailModel):
             chain_type="map_reduce",
             map_prompt=map_prompt_template,
             combine_prompt=combine_prompt_template,
-            verbose=False
+            verbose=True
         )
 
         # Generate text based on provided documents and prompts
