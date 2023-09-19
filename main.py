@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 import tempfile
 from fastapi import FastAPI, HTTPException, UploadFile, File, Form
 from fastapi.responses import FileResponse
+from fastapi.middleware.cors import CORSMiddleware
 from models import UpdateCompanyInfoModel
 from langchain.document_loaders import TextLoader
 from langchain.chains.summarize import load_summarize_chain
@@ -13,6 +14,14 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 # Create a FastAPI instance
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow requests from all origins
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 port = int(os.environ.get("PORT", 8000))
 
