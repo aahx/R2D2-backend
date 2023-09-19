@@ -28,12 +28,19 @@ os.environ["OPENAI_API_KEY"] = os.getenv("API_KEY")
 # Define file paths for company and prospect info
 prospect_info_path = './example_data/prospect_info.txt'
 company_info_path = './example_data/company_info.txt'
+prospect_info_save = './example_data/prospect_save.txt'
+company_info_save = './example_data/company_save.txt'
 
 
 # Health check endpoint
 @app.get('/')
 async def health_check():
     return {"message": "health check status 200"}
+
+# Get company_save.txt
+@app.get('/company_save')
+async def get_company_save():
+    return FileResponse(company_info_save)
 
 # Get company_info.txt
 @app.get('/company_info')
@@ -51,6 +58,11 @@ async def update_company_info(data: UpdateCompanyInfoModel):
     except Exception as e:
         raise HTTPException(
             status_code=500, detail="Failed to update company_info.txt")
+
+# Get prospect_save.txt
+@app.get('/prospect_save')
+async def get_prospect_save():
+    return FileResponse(prospect_info_save)
 
 # Get prospect_info.txt
 @app.get('/prospect_info')
