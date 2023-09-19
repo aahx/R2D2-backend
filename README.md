@@ -1,8 +1,20 @@
 # AI - Sales Marketing Email Generator
-## Langchain and OpenAi API
 
-## Next:
-#### Currently not AWS integrated.
+# Backend
+Technologies: LangChain, FastAPI, OpenAI API
+#### Main Function: Generate Email
+Utilizes LangChain to:
+- Takes Prospect Company's Information
+- Loads and Splits document into smaller chunks
+- Utilizes Map Reduce to run a Map Prompt (OpenAI prompt) on the smaller individual chunks
+- Then utilizes a Combine Prompt (OpenAI) to combine output to give final email
+
+# Link
+https://r2d2-mike-7f8d7793b971.herokuapp.com/docs
+
+
+### Next:
+##### Currently not AWS integrated.
 
 For AWS:
 - Need to incorporate Mangum wrapper for FastApi
