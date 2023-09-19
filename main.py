@@ -12,6 +12,7 @@ from langchain.llms import OpenAI
 from langchain.prompts import PromptTemplate
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
+
 # Create a FastAPI instance
 app = FastAPI()
 
@@ -28,7 +29,6 @@ port = int(os.environ.get("PORT", 8000))
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=port)
-
 
 # Load environment variables
 load_dotenv()
