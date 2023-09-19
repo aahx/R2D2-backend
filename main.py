@@ -195,19 +195,3 @@ async def generate_email(data: GenerateEmailModel):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-
-"""
-    # prospect_info: List[UploadFile] = File(...),
-    # company_info: List[UploadFile] = File(...)):
-
-    for AWS Lambda
-    for file in prospect_info:
-        # Create a temporary file in /tmp directory
-        with tempfile.NamedTemporaryFile(dir='/tmp', delete=False) as temp_file:
-            temp_file.write(await file.read())
-            file_path = temp_file.name
-        ...
-        # Clean up the temporary file
-        os.remove(file_path)
-"""
