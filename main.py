@@ -1,5 +1,4 @@
 import os
-from typing import List
 from dotenv import load_dotenv
 import tempfile
 from fastapi import FastAPI, HTTPException
@@ -16,6 +15,7 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 # Create a FastAPI instance
 app = FastAPI()
 
+# Cross-Origin Resources Sharing support for FastAPI
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # Allow requests from all origins
@@ -39,6 +39,8 @@ prospect_info_path = './example_data/prospect_info.txt'
 company_info_path = './example_data/company_info.txt'
 prospect_info_save = './example_data/prospect_save.txt'
 company_info_save = './example_data/company_save.txt'
+
+
 
 
 # Health check endpoint
