@@ -98,7 +98,7 @@ def chunk_document(data):
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=1000,
         chunk_overlap=0
-    )3
+    )
     return text_splitter.split_documents(data)
 
 
