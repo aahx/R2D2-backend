@@ -2,9 +2,8 @@ import os
 from dotenv import load_dotenv
 import tempfile
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
-from models import UpdateCompanyInfoModel, GenerateEmailModel
+from models import GenerateEmailModel
 from langchain.document_loaders import TextLoader
 from langchain.chains.summarize import load_summarize_chain
 from langchain.llms import OpenAI
