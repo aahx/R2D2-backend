@@ -2,7 +2,6 @@ import os
 from dotenv import load_dotenv
 import tempfile
 from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
 from models import GenerateEmailModel
 from langchain.document_loaders import TextLoader
 from langchain.chains.summarize import load_summarize_chain
@@ -90,7 +89,7 @@ async def generate_email(data: GenerateEmailModel):
         prospect_file_path = create_temp_text_file(prospect_info)
         loader = TextLoader(prospect_file_path)
         data = loader.load()           
-        print(data)
+        # print(data)
         
         # Split the document into chunks
         docs =  chunk_document(data)
