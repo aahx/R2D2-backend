@@ -10,10 +10,14 @@ from langchain.chains.summarize import load_summarize_chain
 from langchain.llms import OpenAI
 from langchain.prompts import PromptTemplate
 from langchain.text_splitter import RecursiveCharacterTextSplitter
+from mangum import Mangum
 
 
 # Create a FastAPI instance
 app = FastAPI()
+
+# Mangum wrapper
+handler = Mangum(app)
 
 # Cross-Origin Resources Sharing support for FastAPI
 app.add_middleware(
