@@ -1,4 +1,6 @@
-fastapi==0.99.1
-langchain==0.0.294
-mangum==0.17.0
-openai==0.28.0
+fastapi
+langchain
+mangum
+openai
+python-dotenv
+tiktoken
