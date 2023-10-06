@@ -52,51 +52,6 @@ company_info_save = './example_data/company_save.txt'
 async def health_check():
     return {"message": "health check status 200"}
 
-# Get company_save.txt
-@app.get('/company_save')
-async def get_company_save():
-    return FileResponse(company_info_save)
-
-# Get company_info.txt
-@app.get('/company_info')
-async def get_company_info():
-    return FileResponse(company_info_path)
-
-# Update company_info.txt
-@app.post('/company_info')
-async def update_company_info(data: UpdateCompanyInfoModel):
-    try:
-        new_content = data.updated_info
-        with open(company_info_path, 'w') as file:
-            file.write(new_content)
-        return {"message": "company_info.txt updated succesfully"}
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail="Failed to update company_info.txt")
-
-# Get prospect_save.txt
-@app.get('/prospect_save')
-async def get_prospect_save():
-    return FileResponse(prospect_info_save)
-
-# Get prospect_info.txt
-@app.get('/prospect_info')
-async def get_prospect_info():
-    return FileResponse(prospect_info_path)
-
-# Update prospect_info.txt
-@app.post('/prospect_info')
-async def update_prospect_info(data: UpdateCompanyInfoModel):
-    try:
-        new_content = data.updated_info
-        with open(prospect_info_path, 'w') as file:
-            file.write(new_content)
-        return {"message": "prospect_info.txt updated succesfully"}
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail="Failed to update prospect_info.txt")
-
-
 # Helper function to chunk a document
 def chunk_document(data):
     text_splitter = RecursiveCharacterTextSplitter(
@@ -104,7 +59,6 @@ def chunk_document(data):
         chunk_overlap=0
     )
     return text_splitter.split_documents(data)
-
 
 # Map prompt used during initial processing of split documents
 map_prompt = """ 
@@ -145,6 +99,7 @@ def create_temp_text_file(data):
         temp_file.write(data)
         return temp_file.name
 
+# Main Function
 # Generate email endpoint
 @app.post('/generate_email')
 async def generate_email(data: GenerateEmailModel):
