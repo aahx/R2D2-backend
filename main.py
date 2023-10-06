@@ -18,32 +18,9 @@ app = FastAPI()
 # Mangum wrapper
 handler = Mangum(app)
 
-# Cross-Origin Resources Sharing support for FastAPI
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # Allow requests from all origins
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-port = int(os.environ.get("PORT", 8000))
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=port)
-
 # Load environment variables
 load_dotenv()
 os.environ["OPENAI_API_KEY"] = os.getenv("API_KEY")
-
-# Define file paths for company and prospect info
-prospect_info_path = './example_data/prospect_info.txt'
-company_info_path = './example_data/company_info.txt'
-prospect_info_save = './example_data/prospect_save.txt'
-company_info_save = './example_data/company_save.txt'
-
-
 
 
 # Health check endpoint
