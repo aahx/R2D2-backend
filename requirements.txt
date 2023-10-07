@@ -1,6 +1,6 @@
 fastapi
 langchain
-mangum
-openai
-python-dotenv
+unstructured
+chromadb
 tiktoken
+openai
