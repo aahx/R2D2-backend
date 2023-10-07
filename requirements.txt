@@ -4,3 +4,4 @@ unstructured
 chromadb
 tiktoken
 openai
+python-dotenv
