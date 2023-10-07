@@ -2,7 +2,7 @@ import os
 from dotenv import load_dotenv
 import tempfile
 from fastapi import FastAPI, HTTPException
-from .models import GenerateEmailModel
+from models.models import GenerateEmailModel
 from langchain.document_loaders import TextLoader
 from langchain.chains.summarize import load_summarize_chain
 from langchain.llms import OpenAI
