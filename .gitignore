@@ -4,3 +4,4 @@ dependencies/
 venv/
 .env
 notes.txt
+numpy_layer/
