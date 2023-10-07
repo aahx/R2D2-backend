@@ -5,3 +5,5 @@ chromadb
 tiktoken
 openai
 python-dotenv
+mangum
+uvicorn
